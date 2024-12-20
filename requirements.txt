@@ -1,5 +1,6 @@
 emcee
 zuko
+corner
 torch
 numpy
 matplotlib
