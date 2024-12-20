@@ -1,6 +1,6 @@
+emcee
+zuko
 torch
 numpy
 matplotlib
 pandas
-emcee
-zuko
