@@ -149,7 +149,7 @@ class ForwardModelHomogeneous:
             gaussian_theta=model_parameters[..., 5],
         )
 
-        phase_arrivals = (distances) / self.background_velocity  + integrals  / self.background_velocity
+        phase_arrivals = distances / (self.background_velocity + integrals)
         
         return phase_arrivals
     
