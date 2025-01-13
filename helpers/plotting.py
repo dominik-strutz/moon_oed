@@ -128,7 +128,7 @@ def plot_single_posterior(
     
     im = ax2.imshow(
         average_posterior.T, extent=(0, length_x, 0, length_y),
-        origin='lower', cmap='seismic', zorder=-1, clim=(-abs(average_posterior).max(), abs(average_posterior).max()))
+        origin='lower', cmap='seismic', zorder=-10, clim=(-abs(average_posterior).max(), abs(average_posterior).max()))
     ax2.set_title('mean posterior wave speed')
 
     # add axes below ax2 for colorbar
@@ -140,7 +140,7 @@ def plot_single_posterior(
                 
         plot_ellipses(
             ax, true_model[..., :2], true_model[...,2:4], true_model[...,5], true_model[..., 4],
-            scatter_kwargs={'c': 'k', 's':10},
+            scatter_kwargs={'c': 'k', 's':10,},
             ellipse_kwargs={'edgecolor': 'k', 'linewidth': 2.5, 'label': 'true model'})
         buffer=50
 
@@ -232,8 +232,8 @@ def plot_n_posterior(
 
         plot_ellipses(ax, true_solutions[i, :2].unsqueeze(0), true_solutions[i, 2:4].unsqueeze(0),
                       true_solutions[i, 5].unsqueeze(0), true_solutions[i, 4].unsqueeze(0),
-                      scatter_kwargs={'c': 'tab:blue', 's': 20, 'label': 'true model (center)'},
-                      ellipse_kwargs={'edgecolor': 'tab:blue', 'linewidth': 2.0, 'label': 'true  (size)'})
+                      scatter_kwargs={'c': 'k', 's': 20, 'label': 'true model (center)'},
+                      ellipse_kwargs={'edgecolor': 'k', 'linewidth': 2.0, 'label': 'true  (size)'})
 
         ax.scatter(
             design[:, 0], design[:, 1], marker='^', color='k', s=40,
