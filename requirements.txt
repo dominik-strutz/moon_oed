@@ -1,6 +1,7 @@
 emcee
 zuko
 corner
+torch_geometric
 torch
 numpy
 matplotlib

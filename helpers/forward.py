@@ -41,6 +41,13 @@ def integrate_multiple_gaussians(
     Returns:
         Tensor: Sum of the Gaussian integrals for each ray, shape (..., N_rays, 1).
     """
+    if (gaussian_mean.dim() == 1) and (gaussian_std.dim() == 1) and (gaussian_amp.dim() == 1) and (gaussian_theta.dim() == 1):
+        gaussian_mean = gaussian_mean.unsqueeze(0)
+        gaussian_std = gaussian_std.unsqueeze(0)
+        gaussian_amp = gaussian_amp.unsqueeze(0)
+        gaussian_theta = gaussian_theta.unsqueeze(0)
+    
+    
     N_rays = ray_start.shape[-2]
     K = gaussian_mean.shape[-2]
     N_dim = ray_start.shape[-1]
@@ -118,7 +125,9 @@ def integrate_multiple_gaussians(
     integrals = prefactor * exp_term * erf_diff  # (..., N_rays, K, 1)
 
     # Sum over the Gaussians for each ray
-    result = torch.sum(integrals/ray_lengths_rot, dim=-2).squeeze(-1)  # (..., N_rays)
+    result = integrals/ray_lengths_rot  # (..., N_rays, K, 1)
+
+    result = result.transpose(-3, -2).squeeze(-1).squeeze(0) # (..., K, N_rays, 1)
 
     return result
 
@@ -154,9 +163,14 @@ class ForwardModelHomogeneous:
         return phase_arrivals
     
 class DataLikelihoodHomogeneous:
-    def __init__(self, fwd_function, noise_std):
+    def __init__(self, fwd_function, noise_std,
+                 min_distance=10,
+                 max_distance=100):
         self.fwd_function = fwd_function
         self.noise_std = noise_std
+        self.min_distance = min_distance
+        self.max_distance = max_distance
+        
     def __call__(
         self,
         model_parameters,
@@ -165,6 +179,30 @@ class DataLikelihoodHomogeneous:
         if model_parameters.dim() == 1:
             model_parameters = model_parameters.unsqueeze(0)
         
-        fwd = self.fwd_function(model_parameters, design)
+        data = self.fwd_function(model_parameters, design)
+            
+        sigma = self.noise_std
         
-        return Independent(Normal(fwd, self.noise_std),1)
+        # # Calculate distances between receivers
+        # combinations = torch.combinations(
+        #     torch.tensor(range(len(design))),
+        #     2, with_replacement=False)
+        # start_points = design[combinations[:, 0]]
+        # end_points = design[combinations[:, 1]]
+        # distances = torch.norm(start_points - end_points, dim=1)
+        
+        # # Increase sigma continuously up to 100 in a small buffer zone after the boundaries
+        # slope = 0.01  # Define the buffer zone
+        # sigma = torch.where(
+        #     distances < self.min_distance,
+        #     sigma * (1 + (self.min_distance - distances) * slope),
+        #     sigma
+        # )
+        # sigma = torch.where(
+        #     distances > self.max_distance,
+        #     sigma * (1 + (distances - self.max_distance) * slope),
+        #     sigma
+        # )
+        # sigma = sigma.clamp(max=2)
+        
+        return Independent(Normal(data, sigma), 1)
